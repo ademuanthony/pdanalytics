@@ -17,26 +17,23 @@ import (
 	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/chaincfg/chainhash"
 	"github.com/decred/dcrd/dcrjson"
+	chainjson "github.com/decred/dcrd/rpc/jsonrpc/types/v2"
 	"github.com/decred/dcrd/rpcclient"
 	"github.com/decred/dcrd/wire"
-	exptypes "github.com/decred/dcrdata/explorer/types"
-	"github.com/decred/dcrdata/txhelpers/v2"
 	"github.com/planetdecred/dcrextdata/app/helpers"
-	"github.com/planetdecred/dcrextdata/cache"
 	"github.com/planetdecred/dcrextdata/datasync"
 )
 
-func NewCollector(interval float64, activeChain *chaincfg.Params, dataStore DataStore) *Collector {
+func NewCollector(ctx context.Context, client *rpcclient.Client, interval float64, activeChain *chaincfg.Params, dataStore DataStore) *Collector {
 	c := &Collector{
+		ctx:                ctx,
+		dcrClient:          client,
 		collectionInterval: interval,
 		dataStore:          dataStore,
 		activeChain:        activeChain,
+		ticketInds:         make(BlockValidatorIndex),
 	}
 	return c
-}
-
-func (c *Collector) SetClient(client *rpcclient.Client) {
-	c.dcrClient = client
 }
 
 func (c *Collector) SetExplorerBestBlock(ctx context.Context) error {
@@ -62,130 +59,112 @@ func (c *Collector) SetExplorerBestBlock(ctx context.Context) error {
 	return nil
 }
 
-func (c *Collector) DcrdHandlers(ctx context.Context, cacheManager *cache.Manager) *rpcclient.NotificationHandlers {
-	var ticketIndsMutex sync.Mutex
-	ticketInds := make(exptypes.BlockValidatorIndex)
-
-	return &rpcclient.NotificationHandlers{
-		OnTxAcceptedVerbose: func(txDetails *dcrjson.TxRawResult) {
-			go func() {
-				if ctx.Err() != nil {
-					return
-				}
-				if !c.syncIsDone {
-					return
-				}
-				receiveTime := helpers.NowUTC()
-
-				msgTx, err := txhelpers.MsgTxFromHex(txDetails.Hex)
-				if err != nil {
-					log.Errorf("Failed to decode transaction hex: %v", err)
-					return
-				}
-
-				if txType := txhelpers.DetermineTxTypeString(msgTx); txType != "Vote" {
-					return
-				}
-
-				var voteInfo *exptypes.VoteInfo
-				validation, version, bits, choices, err := txhelpers.SSGenVoteChoices(msgTx, c.activeChain)
-				if err != nil {
-					log.Errorf("Error in getting vote choice: %s", err.Error())
-					return
-				}
-
-				voteInfo = &exptypes.VoteInfo{
-					Validation: exptypes.BlockValidation{
-						Hash:     validation.Hash.String(),
-						Height:   validation.Height,
-						Validity: validation.Validity,
-					},
-					Version:     version,
-					Bits:        bits,
-					Choices:     choices,
-					TicketSpent: msgTx.TxIn[1].PreviousOutPoint.Hash.String(),
-				}
-
-				ticketIndsMutex.Lock()
-				voteInfo.SetTicketIndex(ticketInds)
-				ticketIndsMutex.Unlock()
-
-				vote := Vote{
-					ReceiveTime: receiveTime,
-					VotingOn:    validation.Height,
-					Hash:        txDetails.Txid,
-					ValidatorId: voteInfo.MempoolTicketIndex,
-				}
-
-				if voteInfo.Validation.Validity {
-					vote.Validity = "Valid"
-				} else {
-					vote.Validity = "Invalid"
-				}
-
-				var retries = 3
-				var targetedBlock *wire.MsgBlock
-
-				// try to get the block from the blockchain until the number of retries has elapsed
-				for i := 0; i <= retries; i++ {
-					targetedBlock, err = c.dcrClient.GetBlock(&validation.Hash)
-					if err == nil {
-						break
-					}
-					time.Sleep(2 * time.Second)
-				}
-
-				// err is ignored since the vote will be updated when the block becomes available
-				if targetedBlock != nil {
-					vote.TargetedBlockTime = targetedBlock.Header.Timestamp.UTC()
-					vote.BlockHash = targetedBlock.Header.BlockHash().String()
-				}
-
-				if err = c.dataStore.SaveVote(ctx, vote); err != nil {
-					log.Error(err)
-				}
-
-				if err = c.dataStore.UpdateVoteTimeDeviationData(ctx); err != nil {
-					log.Errorf("Error in vote receive time deviation data update, %s", err.Error())
-				}
-			}()
-		},
-
-		OnBlockConnected: func(blockHeaderSerialized []byte, transactions [][]byte) {
-			if ctx.Err() != nil {
-				return
-			}
-
-			blockHeader := new(wire.BlockHeader)
-			err := blockHeader.FromBytes(blockHeaderSerialized)
-			if err != nil {
-				log.Error("Failed to deserialize blockHeader in new block notification: %v", err)
-				return
-			}
-
-			if blockHeader.Height > c.bestBlockHeight {
-				c.syncIsDone = true
-			}
-
-			if !c.syncIsDone {
-				log.Infof("Received a stale block height %d, block dropped", blockHeader.Height)
-				return
-			}
-
-			block := Block{
-				BlockInternalTime: blockHeader.Timestamp.UTC(),
-				BlockReceiveTime:  helpers.NowUTC(),
-				BlockHash:         blockHeader.BlockHash().String(),
-				BlockHeight:       blockHeader.Height,
-			}
-			if err = c.dataStore.SaveBlock(ctx, block); err != nil {
-				log.Error(err)
-			}
-			if err = c.dataStore.UpdateBlockBinData(ctx); err != nil {
-				log.Errorf("Error in block bin data update, %s", err.Error())
-			}
-		},
+func (c *Collector) ConnectBlock(blockHeader *wire.BlockHeader) error {
+	if blockHeader.Height > c.bestBlockHeight {
+		c.syncIsDone = true
 	}
+
+	if !c.syncIsDone {
+		log.Infof("Received a stale block height %d, block dropped", blockHeader.Height)
+		return nil
+	}
+
+	block := Block{
+		BlockInternalTime: blockHeader.Timestamp.UTC(),
+		BlockReceiveTime:  helpers.NowUTC(),
+		BlockHash:         blockHeader.BlockHash().String(),
+		BlockHeight:       blockHeader.Height,
+	}
+	if err := c.dataStore.SaveBlock(c.ctx, block); err != nil {
+		log.Error(err)
+		return err
+	}
+	if err := c.dataStore.UpdateBlockBinData(c.ctx); err != nil {
+		log.Errorf("Error in block bin data update, %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (c *Collector) TxReceived(txDetails *chainjson.TxRawResult) error {
+	if !c.syncIsDone {
+		return nil
+	}
+	receiveTime := helpers.NowUTC()
+
+	msgTx, err := MsgTxFromHex(txDetails.Hex)
+	if err != nil {
+		log.Errorf("Failed to decode transaction hex: %v", err)
+		return err
+	}
+
+	if txType := DetermineTxTypeString(msgTx); txType != "Vote" {
+		return nil
+	}
+
+	var voteInfo *VoteInfo
+	validation, version, bits, choices, err := SSGenVoteChoices(msgTx, c.activeChain)
+	if err != nil {
+		log.Errorf("Error in getting vote choice: %s", err.Error())
+		return err
+	}
+
+	voteInfo = &VoteInfo{
+		Validation: BlockValidation{
+			Hash:     validation.Hash,
+			Height:   validation.Height,
+			Validity: validation.Validity,
+		},
+		Version:     version,
+		Bits:        bits,
+		Choices:     choices,
+		TicketSpent: msgTx.TxIn[1].PreviousOutPoint.Hash.String(),
+	}
+
+	c.ticketIndsMutex.Lock()
+	voteInfo.SetTicketIndex(c.ticketInds)
+	c.ticketIndsMutex.Unlock()
+
+	vote := Vote{
+		ReceiveTime: receiveTime,
+		VotingOn:    validation.Height,
+		Hash:        txDetails.Txid,
+		ValidatorId: voteInfo.MempoolTicketIndex,
+	}
+
+	if voteInfo.Validation.Validity {
+		vote.Validity = "Valid"
+	} else {
+		vote.Validity = "Invalid"
+	}
+
+	var retries = 3
+	var targetedBlock *wire.MsgBlock
+
+	// try to get the block from the blockchain until the number of retries has elapsed
+	for i := 0; i <= retries; i++ {
+		hash, _ := chainhash.NewHashFromStr(validation.Hash)
+		targetedBlock, err = c.dcrClient.GetBlock(hash)
+		if err == nil {
+			break
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	// err is ignored since the vote will be updated when the block becomes available
+	if targetedBlock != nil {
+		vote.TargetedBlockTime = targetedBlock.Header.Timestamp.UTC()
+		vote.BlockHash = targetedBlock.Header.BlockHash().String()
+	}
+
+	if err = c.dataStore.SaveVote(c.ctx, vote); err != nil {
+		log.Error(err)
+	}
+
+	if err = c.dataStore.UpdateVoteTimeDeviationData(c.ctx); err != nil {
+		log.Errorf("Error in vote receive time deviation data update, %s", err.Error())
+	}
+	return nil
 }
 
 func (c *Collector) StartMonitoring(ctx context.Context) {
