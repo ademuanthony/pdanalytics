@@ -10,7 +10,6 @@ import (
 
 	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/rpcclient"
-	"github.com/planetdecred/dcrextdata/datasync"
 )
 
 type Mempool struct {
@@ -26,20 +25,12 @@ type Mempool struct {
 }
 
 type DataStore interface {
+	CreateTables(ctx context.Context) error
+	DropTables() error
+	ClearCache() error
 	MempoolTableName() string
-	BlockTableName() string
-	VoteTableName() string
 	StoreMempool(context.Context, Mempool) error
 	LastMempoolTime() (entryTime time.Time, err error)
-	FetchMempoolForSync(ctx context.Context, date time.Time, offtset int, limit int) ([]Mempool, int64, error)
-	SaveBlock(context.Context, Block) error
-	UpdateBlockBinData(context.Context) error
-	FetchBlockForSync(ctx context.Context, blockHeight int64, offtset int, limit int) ([]Block, int64, error)
-	SaveVote(ctx context.Context, vote Vote) error
-	UpdateVoteTimeDeviationData(context.Context) error
-	FetchVoteForSync(ctx context.Context, date time.Time, offtset int, limit int) ([]Vote, int64, error)
-
-	datasync.Store
 }
 
 type Collector struct {

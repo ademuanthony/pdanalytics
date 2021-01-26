@@ -19,7 +19,8 @@ import (
 	"github.com/planetdecred/dcrextdata/app/helpers"
 )
 
-func NewCollector(ctx context.Context, client *rpcclient.Client, interval float64, activeChain *chaincfg.Params, dataStore DataStore) *Collector {
+func NewCollector(ctx context.Context, client *rpcclient.Client, interval float64,
+	 activeChain *chaincfg.Params, dataStore DataStore) (*Collector, error) {
 	c := &Collector{
 		ctx:                ctx,
 		dcrClient:          client,
@@ -27,7 +28,8 @@ func NewCollector(ctx context.Context, client *rpcclient.Client, interval float6
 		dataStore:          dataStore,
 		activeChain:        activeChain,
 	}
-	return c
+	
+	return c, nil
 }
 
 func (c *Collector) SetExplorerBestBlock(ctx context.Context) error {
