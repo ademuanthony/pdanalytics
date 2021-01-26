@@ -44,6 +44,7 @@ type DataStore interface {
 	LastMempoolBlockHeight() (height int64, err error)
 	MempoolCount(ctx context.Context) (int64, error)
 	Mempools(ctx context.Context, offtset int, limit int) ([]Dto, error)
+	FetchEncodeChart(ctx context.Context, dataType, binString string) ([]byte, error)
 }
 
 type Collector struct {

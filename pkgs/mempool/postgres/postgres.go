@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/planetdecred/pdanalytics/pkgs/mempool"
 	"github.com/planetdecred/pdanalytics/pkgs/cache"
+	"github.com/planetdecred/pdanalytics/pkgs/mempool"
 	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres/models"
 	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
@@ -322,4 +322,125 @@ func (pg *PgDb) updateMempoolDailyAvg(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// *****CHARTS GETTER******* //
+
+func (pg *PgDb) FetchEncodeChart(ctx context.Context, dataType, binString string) ([]byte, error) {
+
+	switch dataType {
+	case cache.MempoolSize:
+		return pg.fetchEncodeMempoolSize(ctx, binString)
+	case cache.MempoolFees:
+		return pg.fetchEncodeMempoolFee(ctx, binString)
+
+	case cache.MempoolTxCount:
+		return pg.fetchEncodeMempoolTxCount(ctx, binString)
+	}
+	return nil, cache.UnknownChartErr
+}
+
+func (pg *PgDb) fetchEncodeMempoolSize(ctx context.Context, binString string) ([]byte, error) {
+	if binString == string(cache.DefaultBin) {
+		mempoolSlice, err := models.Mempools(
+			qm.Select(models.MempoolColumns.Time, models.MempoolColumns.Size),
+			qm.OrderBy(models.MempoolColumns.Time),
+		).All(ctx, pg.db)
+		if err != nil {
+			return nil, err
+		}
+		var time = make(cache.ChartUints, len(mempoolSlice))
+		var data = make(cache.ChartUints, len(mempoolSlice))
+		for i, m := range mempoolSlice {
+			time[i] = uint64(m.Time.UTC().Unix())
+			data[i] = uint64(m.Size.Int)
+		}
+		return cache.Encode(nil, time, data)
+	}
+
+	mempoolSlice, err := models.MempoolBins(
+		models.MempoolBinWhere.Bin.EQ(binString),
+		qm.Select(models.MempoolBinColumns.Time, models.MempoolBinColumns.Size),
+		qm.OrderBy(models.MempoolBinColumns.Time),
+	).All(ctx, pg.db)
+	if err != nil {
+		return nil, err
+	}
+	var time = make(cache.ChartUints, len(mempoolSlice))
+	var data = make(cache.ChartUints, len(mempoolSlice))
+	for i, m := range mempoolSlice {
+		time[i] = uint64(m.Time)
+		data[i] = uint64(m.Size.Int)
+	}
+	return cache.Encode(nil, time, data)
+}
+
+func (pg *PgDb) fetchEncodeMempoolFee(ctx context.Context, binString string) ([]byte, error) {
+	if binString == string(cache.DefaultBin) {
+		mempoolSlice, err := models.Mempools(
+			qm.Select(models.MempoolColumns.Time, models.MempoolColumns.TotalFee),
+			qm.OrderBy(models.MempoolColumns.Time),
+		).All(ctx, pg.db)
+		if err != nil {
+			return nil, err
+		}
+		var time = make(cache.ChartUints, len(mempoolSlice))
+		var data = make(cache.ChartFloats, len(mempoolSlice))
+		for i, m := range mempoolSlice {
+			time[i] = uint64(m.Time.UTC().Unix())
+			data[i] = m.TotalFee.Float64
+		}
+		return cache.Encode(nil, time, data)
+	}
+
+	mempoolSlice, err := models.MempoolBins(
+		models.MempoolBinWhere.Bin.EQ(binString),
+		qm.Select(models.MempoolBinColumns.Time, models.MempoolBinColumns.TotalFee),
+		qm.OrderBy(models.MempoolBinColumns.Time),
+	).All(ctx, pg.db)
+	if err != nil {
+		return nil, err
+	}
+	var time = make(cache.ChartUints, len(mempoolSlice))
+	var data = make(cache.ChartFloats, len(mempoolSlice))
+	for i, m := range mempoolSlice {
+		time[i] = uint64(m.Time)
+		data[i] = m.TotalFee.Float64
+	}
+	return cache.Encode(nil, time, data)
+}
+
+func (pg *PgDb) fetchEncodeMempoolTxCount(ctx context.Context, binString string) ([]byte, error) {
+	if binString == string(cache.DefaultBin) {
+		mempoolSlice, err := models.Mempools(
+			qm.Select(models.MempoolColumns.Time, models.MempoolColumns.NumberOfTransactions),
+			qm.OrderBy(models.MempoolColumns.Time),
+		).All(ctx, pg.db)
+		if err != nil {
+			return nil, err
+		}
+		var time = make(cache.ChartUints, len(mempoolSlice))
+		var data = make(cache.ChartUints, len(mempoolSlice))
+		for i, m := range mempoolSlice {
+			time[i] = uint64(m.Time.UTC().Unix())
+			data[i] = uint64(m.NumberOfTransactions.Int)
+		}
+		return cache.Encode(nil, time, data)
+	}
+
+	mempoolSlice, err := models.MempoolBins(
+		models.MempoolBinWhere.Bin.EQ(binString),
+		qm.Select(models.MempoolBinColumns.Time, models.MempoolBinColumns.NumberOfTransactions),
+		qm.OrderBy(models.MempoolBinColumns.Time),
+	).All(ctx, pg.db)
+	if err != nil {
+		return nil, err
+	}
+	var time = make(cache.ChartUints, len(mempoolSlice))
+	var data = make(cache.ChartUints, len(mempoolSlice))
+	for i, m := range mempoolSlice {
+		time[i] = uint64(m.Time)
+		data[i] = uint64(m.NumberOfTransactions.Int)
+	}
+	return cache.Encode(nil, time, data)
 }

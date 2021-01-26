@@ -961,13 +961,13 @@ var responseKeys = []string{"x", "y", "z"}
 
 // Encode the slices. The set lengths are truncated to the smallest of the
 // arguments.
-func (charts *Manager) Encode(keys []string, sets ...Lengther) ([]byte, error) {
-	return charts.encodeArr(keys, sets)
+func Encode(keys []string, sets ...Lengther) ([]byte, error) {
+	return encodeArr(keys, sets)
 }
 
 // Encode the slices. The set lengths are truncated to the smallest of the
 // arguments.
-func (charts *Manager) encodeArr(keys []string, sets []Lengther) ([]byte, error) {
+func encodeArr(keys []string, sets []Lengther) ([]byte, error) {
 	if keys == nil {
 		keys = responseKeys
 	}
@@ -1046,7 +1046,7 @@ func MakePowChart(charts *Manager, dates ChartUints, deviations []ChartNullUints
 	if recs[0].Length() == 0 {
 		recs = recCopy
 	}
-	return charts.Encode(nil, recs...)
+	return Encode(nil, recs...)
 }
 
 func MakeVspChart(charts *Manager, dates ChartUints, deviations []ChartNullData, vsps []string) ([]byte, error) {
@@ -1061,5 +1061,5 @@ func MakeVspChart(charts *Manager, dates ChartUints, deviations []ChartNullData,
 	if recs[0].Length() == 0 {
 		recs = recCopy
 	}
-	return charts.Encode(nil, recs...)
+	return Encode(nil, recs...)
 }
