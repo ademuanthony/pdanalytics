@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/decred/dcrd/chaincfg"
-	"github.com/decred/dcrd/rpcclient"
+	"github.com/decred/dcrd/chaincfg/v2"
+	"github.com/decred/dcrd/rpcclient/v5"
 )
 
 type Mempool struct {
@@ -18,6 +18,18 @@ type Mempool struct {
 	Size                 int32     `json:"size"`
 	TotalFee             float64   `json:"total_fee"`
 	Total                float64   `json:"total"`
+}
+
+type Dto struct {
+	Time                 string  `json:"time"`
+	FirstSeenTime        string  `json:"first_seen_time"`
+	NumberOfTransactions int     `json:"number_of_transactions"`
+	Voters               int     `json:"voters"`
+	Tickets              int     `json:"tickets"`
+	Revocations          int     `json:"revocations"`
+	Size                 int32   `json:"size"`
+	TotalFee             float64 `json:"total_fee"`
+	Total                float64 `json:"total"`
 }
 
 type DataStore interface {

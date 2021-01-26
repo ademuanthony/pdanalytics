@@ -12,15 +12,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/decred/dcrd/chaincfg"
 	"github.com/decred/dcrd/chaincfg/chainhash"
-	"github.com/decred/dcrd/dcrjson"
-	"github.com/decred/dcrd/rpcclient"
+	"github.com/decred/dcrd/chaincfg/v2"
+	dcrjson "github.com/decred/dcrd/rpc/jsonrpc/types/v2"
+	"github.com/decred/dcrd/rpcclient/v5"
 	"github.com/planetdecred/dcrextdata/app/helpers"
 )
 
 func NewCollector(ctx context.Context, client *rpcclient.Client, interval float64,
-	 activeChain *chaincfg.Params, dataStore DataStore) (*Collector, error) {
+	activeChain *chaincfg.Params, dataStore DataStore) (*Collector, error) {
 	c := &Collector{
 		ctx:                ctx,
 		dcrClient:          client,
@@ -28,16 +28,16 @@ func NewCollector(ctx context.Context, client *rpcclient.Client, interval float6
 		dataStore:          dataStore,
 		activeChain:        activeChain,
 	}
-	
+
 	return c, nil
 }
 
 func (c *Collector) SetExplorerBestBlock(ctx context.Context) error {
 	var explorerUrl string
 	switch c.activeChain.Name {
-	case chaincfg.MainNetParams.Name:
+	case chaincfg.MainNetParams().Name:
 		explorerUrl = "https://explorer.dcrdata.org/api/block/best"
-	case chaincfg.TestNet3Params.Name:
+	case chaincfg.TestNet3Params().Name:
 		explorerUrl = "https://testnet.dcrdata.org/api/block/best"
 	}
 
