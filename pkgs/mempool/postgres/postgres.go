@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/planetdecred/dcrextdata/cache"
-	"github.com/planetdecred/dcrextdata/mempool"
+	"github.com/planetdecred/pdanalytics/pkgs/mempool"
+	"github.com/planetdecred/pdanalytics/pkgs/cache"
 	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres/models"
 	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"

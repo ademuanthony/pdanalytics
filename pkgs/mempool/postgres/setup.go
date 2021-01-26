@@ -45,6 +45,7 @@ func (db *PgDb) CreateTables(ctx context.Context) error {
 			return err
 		}
 	}
+	return nil
 }
 
 func (pg *PgDb) createMempoolDataTable() error {

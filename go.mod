@@ -16,16 +16,17 @@ require (
 	github.com/google/gops v0.3.13
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/jrick/logrotate v1.0.0
-	github.com/planetdecred/dcrextdata v0.0.0-20201006010145-cddd04eb454b
 	github.com/planetdecred/pdanalytics/pkgs/attackcost v0.0.0-00010101000000-000000000000
 	github.com/planetdecred/pdanalytics/pkgs/mempool v0.0.0-00010101000000-000000000000
 	github.com/planetdecred/pdanalytics/pkgs/parameters v0.0.0-00010101000000-000000000000
 	github.com/planetdecred/pdanalytics/pkgs/stakingreward v0.0.0-00010101000000-000000000000
 	github.com/planetdecred/pdanalytics/web v0.0.0-20210125191324-0735b483e313
+	golang.org/x/crypto v0.0.0-20190923035154-9ee001bba392 // indirect
 )
 
 replace (
 	github.com/planetdecred/pdanalytics/pkgs/attackcost => ./pkgs/attackcost
+	github.com/planetdecred/pdanalytics/pkgs/cache => ./pkgs/cache
 	github.com/planetdecred/pdanalytics/pkgs/mempool => ./pkgs/mempool
 	github.com/planetdecred/pdanalytics/pkgs/parameters => ./pkgs/parameters
 	github.com/planetdecred/pdanalytics/pkgs/stakingreward => ./pkgs/stakingreward
