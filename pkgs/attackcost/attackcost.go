@@ -81,8 +81,6 @@ func New(dcrdClient *rpcclient.Client, webServer *web.Server, viewFolder string,
 		},
 	})
 
-	ac.webServer.AddMenuItem(web.MenuItem{})
-
 	// Development subsidy address of the current network
 	devSubsidyAddress, err := web.DevSubsidyAddress(params)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/decred/dcrd/chaincfg/v2"
 	"github.com/decred/dcrd/rpcclient/v5"
+	"github.com/planetdecred/pdanalytics/web"
 )
 
 type Mempool struct {
@@ -53,4 +54,12 @@ type Collector struct {
 	activeChain        *chaincfg.Params
 	syncIsDone         bool
 	bestBlockHeight    uint32
+
+	templates web.Templates
+	webServer *web.Server
+	pageData  *web.PageData
+
+	Version          string
+	NetName          string
+	MeanVotingBlocks int64
 }
