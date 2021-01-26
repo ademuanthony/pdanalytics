@@ -5,6 +5,8 @@ import { definitionsFromContext } from 'stimulus/webpack-helpers'
 import { darkEnabled } from './js/services/theme_service'
 
 require('./scss/application.scss')
+require('./css/style.scss')
+require('./css/tile.scss')
 
 window.darkEnabled = darkEnabled
 

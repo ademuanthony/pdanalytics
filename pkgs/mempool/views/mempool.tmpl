@@ -1,10 +1,11 @@
+{{define "mempool"}}
 <!DOCTYPE html>
 <html lang="en">
-{{ template "html-head" }}
+{{ template "html-head" "Mempool"}}
 
-<body data-controller="receive">
+<body data-controller="receive" class="{{ theme }}{{if .Cookies.DarkMode}} darkBG{{end}}">
 <div class="body" data-controller="mempool" data-mempool-block-time="{{.BlockTime}}">
-    {{ template "header" }}
+    {{ template "navbar" . }}
     <div class="content">
         <div class="container-fluid">
 
@@ -214,7 +215,8 @@
             <div class="loading" data-target="mempool.loadingData"><div class="loader"></div></div>
         </div>
 
-        {{ template "footer" }}
+        {{ template "footer" . }}
 </body>
 
 </html>
+{{end}}
