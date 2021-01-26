@@ -60,7 +60,7 @@ func NewCollector(ctx context.Context, client *rpcclient.Client, interval float6
 		activeChain:        activeChain,
 	}
 
-	tmpls := []string{"mempool"}
+	tmpls := []string{"mempool", "status"}
 
 	for _, name := range tmpls {
 		if err := c.templates.AddTemplate(name); err != nil {

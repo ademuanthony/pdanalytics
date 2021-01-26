@@ -194,7 +194,7 @@ func _main(ctx context.Context) error {
 			log.Error(err)
 			return fmt.Errorf("Failed to create new attackcost component, %s", err.Error())
 		}
-		go mp.StartMonitoring()
+		go mp.StartMonitoring(ctx)
 	}
 
 	// (*notify.Notifier).processBlock will discard incoming block if PrevHash does not match

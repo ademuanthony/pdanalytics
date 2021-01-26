@@ -7,6 +7,11 @@ import (
 
 	"github.com/decred/slog"
 	"github.com/jrick/logrotate/rotator"
+	"github.com/planetdecred/pdanalytics/pkgs/attackcost"
+	"github.com/planetdecred/pdanalytics/pkgs/mempool"
+	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres"
+	"github.com/planetdecred/pdanalytics/pkgs/parameters"
+	"github.com/planetdecred/pdanalytics/pkgs/stakingreward"
 )
 
 // logWriter implements an io.Writer that outputs to both standard output and
@@ -41,10 +46,17 @@ var (
 	paramLog         = backendLog.Logger("PARA")
 	attackcostLog    = backendLog.Logger("ATCK")
 	stakingrewardLog = backendLog.Logger("STCK")
+	mempoolLog       = backendLog.Logger("MEMP")
+	mempoolPgLog     = backendLog.Logger("MPPG")
 )
 
 // Initialize package-global logger variables.
 func init() {
+	parameters.UseLogger(paramLog)
+	attackcost.UseLogger(attackcostLog)
+	stakingreward.UseLogger(stakingrewardLog)
+	mempool.UseLogger(mempoolLog)
+	postgres.UseLogger(mempoolPgLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -53,6 +65,8 @@ var subsystemLoggers = map[string]slog.Logger{
 	"PARA": paramLog,
 	"ATCK": attackcostLog,
 	"STCK": stakingrewardLog,
+	"MEMP": mempoolLog,
+	"MPPG": mempoolPgLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and

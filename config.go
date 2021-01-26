@@ -30,7 +30,7 @@ const (
 	defaultDbPort         = "5432"
 	defaultDbUser         = "postgres"
 	defaultDbPass         = "dbpass"
-	defaultDbName         = "dcrextdata"
+	defaultDbName         = "pdanalytics"
 )
 
 var activeNet = &netparams.MainNetParams
