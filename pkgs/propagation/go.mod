@@ -13,4 +13,5 @@ require (
 	github.com/decred/slog v1.1.0
 	github.com/planetdecred/dcrextdata v0.0.0-20201006010145-cddd04eb454b
 	github.com/planetdecred/pdanalytics/web v0.0.0-20210125191324-0735b483e313
+	go.opencensus.io v0.22.5
 )
