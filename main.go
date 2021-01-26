@@ -17,6 +17,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/google/gops/agent"
 	"github.com/planetdecred/pdanalytics/pkgs/attackcost"
+	"github.com/planetdecred/pdanalytics/pkgs/mempool"
+	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres"
 	"github.com/planetdecred/pdanalytics/pkgs/parameters"
 	"github.com/planetdecred/pdanalytics/pkgs/stakingreward"
 	"github.com/planetdecred/pdanalytics/web"
@@ -178,6 +180,21 @@ func _main(ctx context.Context) error {
 		}
 
 		notifier.RegisterBlockHandlerGroup(attCost.ConnectBlock)
+	}
+
+	if cfg.EnableMempool == 1 {
+		db, err := postgres.NewPgDb(cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPass, cfg.DBName, cfg.LogLevel == DebugLogLevel)
+
+		if err != nil {
+			return fmt.Errorf("error in establishing database connection: %s", err.Error())
+		}
+
+		mp, err := mempool.NewCollector(ctx, dcrdClient, cfg.MempoolInterval, activeChain, db, webServer, "")
+		if err != nil {
+			log.Error(err)
+			return fmt.Errorf("Failed to create new attackcost component, %s", err.Error())
+		}
+		go mp.StartMonitoring()
 	}
 
 	// (*notify.Notifier).processBlock will discard incoming block if PrevHash does not match

@@ -26,6 +26,11 @@ const (
 	defaultDataDirname    = "data"
 	defaultLogLevel       = "info"
 	defaultLogDirname     = "logs"
+	defaultDbHost         = "localhost"
+	defaultDbPort         = "5432"
+	defaultDbUser         = "postgres"
+	defaultDbPass         = "dbpass"
+	defaultDbName         = "dcrextdata"
 )
 
 var activeNet = &netparams.MainNetParams
@@ -47,6 +52,7 @@ var (
 	defaultTestnetPort        = "17778"
 	defaultSimnetPort         = "17779"
 	defaultCacheControlMaxAge = 86400
+	defaultMempoolInterval    = 60.0
 	defaultServerHeader       = "pdanalytics"
 
 	// Exchange bot
@@ -57,6 +63,13 @@ var (
 	defaultMainnetLink  = "https://explorer.planetdecred.org/"
 	defaultTestnetLink  = "https://testnet.planetdecred.org/"
 	defaultOnionAddress = ""
+
+	// log levels
+	TraceLogLevel   = "trace"
+	DebugLogLevel   = "debug"
+	InfoLogLevel    = "info"
+	WarningLogLevel = "warning"
+	ErrorLogLevel   = "error"
 )
 
 type config struct {
@@ -77,13 +90,20 @@ type config struct {
 	ShowVersion  bool   `short:"V" long:"version" description:"Display version information and exit"`
 	TestNet      bool   `long:"testnet" description:"Use the test network (default mainnet)" env:"PDANALYTICS_USE_TESTNET"`
 	SimNet       bool   `long:"simnet" description:"Use the simulation test network (default mainnet)" env:"PDANALYTICS_USE_SIMNET"`
-	DebugLevel   string `short:"d" long:"debuglevel" description:"Logging level {trace, debug, info, warn, error, critical}" env:"PDANALYTICS_LOG_LEVEL"`
+	LogLevel     string `short:"l" long:"loglevel" description:"Logging level {trace, debug, info, warn, error, critical}" env:"PDANALYTICS_LOG_LEVEL"`
 	Quiet        bool   `short:"q" long:"quiet" description:"Easy way to set debuglevel to error" env:"PDANALYTICS_QUIET"`
 	HTTPProfile  bool   `long:"httpprof" short:"p" description:"Start HTTP profiler." env:"PDANALYTICS_ENABLE_HTTP_PROFILER"`
 	HTTPProfPath string `long:"httpprofprefix" description:"URL path prefix for the HTTP profiler." env:"PDANALYTICS_HTTP_PROFILER_PREFIX"`
 	CPUProfile   string `long:"cpuprofile" description:"File for CPU profiling." env:"PDANALYTICS_CPU_PROFILER_FILE"`
 	UseGops      bool   `short:"g" long:"gops" description:"Run with gops diagnostics agent listening. See github.com/google/gops for more information." env:"PDANALYTICS_USE_GOPS"`
 	ReloadHTML   bool   `long:"reload-html" description:"Reload HTML templates on every request" env:"DCRDATA_RELOAD_HTML"`
+
+	// Postgresql Configuration
+	DBHost string `long:"dbhost" description:"Database host"`
+	DBPort string `long:"dbport" description:"Database port"`
+	DBUser string `long:"dbuser" description:"Database username"`
+	DBPass string `long:"dbpass" description:"Database password"`
+	DBName string `long:"dbname" description:"Database name"`
 
 	// API/server
 	APIProto           string `long:"apiproto" description:"Protocol for API (http or https)" env:"PDANALYTICS_ENABLE_HTTPS"`
@@ -104,9 +124,11 @@ type config struct {
 	RateCertificate   string `long:"ratecert" description:"File containing DCRRates TLS certificate file." env:"DCRDATA_RATE_MASTER"`
 
 	// Modules config
-	EnableChainParameters         int `long:"parameters" description:"Enable/Disables the chain parameter component from running."`
-	EnableAttackCost              int `long:"attackcost" description:"Enable/Disables the attack cost calculator component from running."`
-	EnableStakingRewardCalculator int `long:"stakingreward" description:"Enable/Disables the staking reward calculator component from running."`
+	EnableChainParameters         int     `long:"parameters" description:"Enable/Disables the chain parameter component from running."`
+	EnableAttackCost              int     `long:"attackcost" description:"Enable/Disables the attack cost calculator component from running."`
+	EnableStakingRewardCalculator int     `long:"stakingreward" description:"Enable/Disables the staking reward calculator component from running."`
+	EnableMempool                 int     `long:"mempool" description:"Enable/Disables the mempool component from running."`
+	MempoolInterval               float64 `long:"mempoolinterval" description:"The duration of time between mempool collection"`
 }
 
 var (
@@ -114,9 +136,14 @@ var (
 		HomeDir:                       defaultHomeDir,
 		DataDir:                       defaultDataDir,
 		LogDir:                        defaultLogDir,
+		DBHost:                        defaultDbHost,
+		DBPort:                        defaultDbPort,
+		DBUser:                        defaultDbUser,
+		DBPass:                        defaultDbPass,
+		DBName:                        defaultDbName,
 		MaxLogZips:                    defaultMaxLogZips,
 		ConfigFile:                    defaultConfigFile,
-		DebugLevel:                    defaultLogLevel,
+		LogLevel:                      defaultLogLevel,
 		HTTPProfPath:                  defaultHTTPProfPath,
 		APIProto:                      defaultAPIProto,
 		CacheControlMaxAge:            defaultCacheControlMaxAge,
@@ -131,6 +158,8 @@ var (
 		EnableStakingRewardCalculator: 1,
 		EnableChainParameters:         1,
 		EnableAttackCost:              1,
+		EnableMempool:                 1,
+		MempoolInterval:               defaultMempoolInterval,
 	}
 )
 
@@ -516,11 +545,11 @@ func loadConfig() (*config, error) {
 
 	// Parse, validate, and set debug log level(s).
 	if cfg.Quiet {
-		cfg.DebugLevel = "error"
+		cfg.LogLevel = "error"
 	}
 
 	// Parse, validate, and set debug log level(s).
-	if err := parseAndSetDebugLevels(cfg.DebugLevel); err != nil {
+	if err := parseAndSetDebugLevels(cfg.LogLevel); err != nil {
 		err = fmt.Errorf("%s: %v", funcName, err.Error())
 		fmt.Fprintln(os.Stderr, err)
 		parser.WriteHelp(os.Stderr)

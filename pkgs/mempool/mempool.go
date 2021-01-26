@@ -365,7 +365,7 @@ func (c *Collector) commonData(r *http.Request) *web.CommonPageData {
 
 	darkMode, err := r.Cookie(web.DarkModeCoookie)
 	if err != nil && err != http.ErrNoCookie {
-		log.Errorf("Cookie dcrdataDarkBG retrieval error: %v", err)
+		log.Errorf("Cookie pdanalyticsDarkBG retrieval error: %v", err)
 	}
 	return &web.CommonPageData{
 		Version:       c.Version,
