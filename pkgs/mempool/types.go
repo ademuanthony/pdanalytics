@@ -1,7 +1,3 @@
-// Copyright (c) 2018-2019 The Decred developers
-// Use of this source code is governed by an ISC
-// license that can be found in the LICENSE file.
-
 package mempool
 
 import (
@@ -30,7 +26,11 @@ type DataStore interface {
 	ClearCache() error
 	MempoolTableName() string
 	StoreMempool(context.Context, Mempool) error
+	UpdateMempoolAggregateData(ctx context.Context) error
 	LastMempoolTime() (entryTime time.Time, err error)
+	LastMempoolBlockHeight() (height int64, err error)
+	MempoolCount(ctx context.Context) (int64, error)
+	Mempools(ctx context.Context, offtset int, limit int) ([]Dto, error)
 }
 
 type Collector struct {
