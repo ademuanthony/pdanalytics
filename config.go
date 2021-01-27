@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -124,11 +125,20 @@ type config struct {
 	RateCertificate   string `long:"ratecert" description:"File containing DCRRates TLS certificate file." env:"DCRDATA_RATE_MASTER"`
 
 	// Modules config
-	EnableChainParameters         int     `long:"parameters" description:"Enable/Disables the chain parameter component from running."`
-	EnableAttackCost              int     `long:"attackcost" description:"Enable/Disables the attack cost calculator component from running."`
-	EnableStakingRewardCalculator int     `long:"stakingreward" description:"Enable/Disables the staking reward calculator component from running."`
-	EnableMempool                 int     `long:"mempool" description:"Enable/Disables the mempool component from running."`
-	MempoolInterval               float64 `long:"mempoolinterval" description:"The duration of time between mempool collection"`
+	EnableChainParameters         int `long:"parameters" description:"Enable/Disables the chain parameter component from running."`
+	EnableAttackCost              int `long:"attackcost" description:"Enable/Disables the attack cost calculator component from running."`
+	EnableStakingRewardCalculator int `long:"stakingreward" description:"Enable/Disables the staking reward calculator component from running."`
+	EnableMempool                 int `long:"mempool" description:"Enable/Disables the mempool component from running."`
+	EnablePropagation             int `long:"propagation" description:"Enable/Disables the block propagation component from running."`
+
+	// Mempool
+	MempoolInterval float64 `long:"mempoolinterval" description:"The duration of time between mempool collection"`
+
+	// sync
+	DisableSync   bool     `long:"disablesync" description:"Disables data sharing operation"`
+	SyncInterval  int      `long:"syncinterval" description:"The number of minuets between sync operations"`
+	SyncSources   []string `long:"syncsource" description:"Address of remote instance to sync data from"`
+	SyncDatabases []string `long:"syncdatabase" description:"Database to sync remote data to"`
 }
 
 var (
@@ -159,6 +169,7 @@ var (
 		EnableChainParameters:         1,
 		EnableAttackCost:              1,
 		EnableMempool:                 1,
+		EnablePropagation:             1,
 		MempoolInterval:               defaultMempoolInterval,
 	}
 )
@@ -581,6 +592,10 @@ func loadConfig() (*config, error) {
 	// trailing slash.
 	cfg.MainnetLink = strings.TrimSuffix(cfg.MainnetLink, "/") + "/"
 	cfg.TestnetLink = strings.TrimSuffix(cfg.TestnetLink, "/") + "/"
+
+	if len(cfg.SyncDatabases) != len(cfg.SyncSources) {
+		return nil, errors.New("You must set the same number of sync source and database.")
+	}
 
 	return &cfg, nil
 }

@@ -4,7 +4,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/planetdecred/pdanalytics/dbhelpers"
 )
@@ -66,7 +65,7 @@ func (pg *PgDb) mempoolDataTableExits() bool {
 }
 
 func (pg *PgDb) mempoolBinDataTableExits() bool {
-	exists, _ := pg.db, ableExists(pg.db, "mempool_bin")
+	exists, _ := dbhelpers.TableExists(pg.db, "mempool_bin")
 	return exists
 }
 

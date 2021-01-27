@@ -13,7 +13,6 @@ import (
 	"github.com/decred/dcrd/dcrutil"
 	"github.com/decred/dcrd/rpcclient/v5"
 	"github.com/decred/dcrd/wire"
-	"github.com/planetdecred/dcrextdata/datasync"
 	"github.com/planetdecred/pdanalytics/web"
 )
 
@@ -57,7 +56,9 @@ type store interface {
 	FetchEncodePropagationChart(ctx context.Context, dataType, axis string,
 		binString string, extras ...string) ([]byte, error)
 
-	datasync.Store
+	SaveBlockFromSync(ctx context.Context, block interface{}) error
+	SaveVoteFromSync(ctx context.Context, vote interface{}) error
+	UpdatePropagationData(ctx context.Context) error
 }
 
 // TicketIndex is used to assign an index to a ticket hash.

@@ -4,7 +4,7 @@
 {{ template "html-head" "Block Propagation"}}
 
 <body data-controller="receive" class="{{ theme }}{{if .Cookies.DarkMode}} darkBG{{end}}">
-<div class="body" data-controller="propagation" data-propagation-block-time="{{.blockTime}}" 
+<div class="body" data-controller="propagation" data-propagation-block-time="{{.BlockTime}}" 
     data-action="scroll@window->propagation#onScroll">
     {{ template "navbar" . }}
     <div class="content">
@@ -17,10 +17,10 @@
                     <div class="chart-control-wrapper ml-auto mr-3 my-2">
                         <div class="chart-control-label">View</div>
                         <div class="chart-control ml-auto mr-3" data-target="propagation.viewOptionControl"
-                            data-initial-value="{{ .propagation.selectedViewOption }}">
+                            data-initial-value="{{ .Propagation.selectedViewOption }}">
                             <ul class="nav nav-pills">
                                 <li class="nav-item">
-                                    <a class="nav-link {{ if eq .propagation.selectedViewOption "chart"}} active {{ end }}"
+                                    <a class="nav-link {{ if eq .Propagation.selectedViewOption "chart"}} active {{ end }}"
                                             href="javascript:void(0);"
                                             data-target="propagation.viewOption"
                                             data-action="click->propagation#setChart"
@@ -28,7 +28,7 @@
                                     >Chart</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link {{ if eq .propagation.selectedViewOption "table"}} active {{ end }}"
+                                    <a class="nav-link {{ if eq .Propagation.selectedViewOption "table"}} active {{ end }}"
                                             href="javascript:void(0);"
                                             data-target="propagation.viewOption"
                                             data-action="click->propagation#setTable"
@@ -44,9 +44,9 @@
                             data-target="propagation.recordSetSelector">
                             <div class="chart-control-label">Data Type</div>
                             <div class="chart-control propagation-control mx-auto">
-                                <ul class="nav nav-pills {{ if eq .propagation.selectedViewOption "table"}} d-none {{ end }}"
+                                <ul class="nav nav-pills {{ if eq .Propagation.selectedViewOption "table"}} d-none {{ end }}"
                                     data-target="propagation.tableRecordSetOptions"
-                                    data-initial-value="{{ .propagation.selectedRecordSet }}">
+                                    data-initial-value="{{ .Propagation.selectedRecordSet }}">
                                     <li class="nav-item" data-target="propagation.bothRecordWrapper">
                                         <a data-target="propagation.selectedRecordSet"
                                                 data-action="click->propagation#setBothRecordSet"
@@ -70,10 +70,10 @@
                                     </li>
                                 </ul>
 
-                                <ul class="nav nav-pills {{ if eq .propagation.selectedViewOption "chart"}} d-none {{ end }}"
+                                <ul class="nav nav-pills {{ if eq .Propagation.selectedViewOption "chart"}} d-none {{ end }}"
                                     data-target="propagation.chartTypesWrapper"
-                                    data-sync-sources="{{ .propagation.syncSources }}"
-                                    data-initial-value="{{ .propagation.chartType }}">
+                                    data-sync-sources="{{ .Propagation.syncSources }}"
+                                    data-initial-value="{{ .Propagation.chartType }}">
                                     <li class="nav-item">
                                         <a data-target="propagation.chartType"
                                                 data-action="click->propagation#changeChartType"
@@ -181,47 +181,47 @@
             </div>
 
 
-            <div class="inner-content {{ if not .propagation.nextPage }}d-none{{ end }}" data-target="propagation.tablesWrapper">
+            <div class="inner-content {{ if not .Propagation.nextPage }}d-none{{ end }}" data-target="propagation.tablesWrapper">
                 <div class="table-details">
                     <h3>Propagation</h3>
                     <div class="paginate">
-                        <div class="ml-3 mr-auto control-div p-0 {{ if .propagation.chartView }}d-none{{ end }}"
+                        <div class="ml-3 mr-auto control-div p-0 {{ if .Propagation.chartView }}d-none{{ end }}"
                             data-target="propagation.numPageWrapper">
                             <div class="control-label">Page Size:</div>
                             <select data-target="propagation.selectedNum"
                                     data-action="change->propagation#numberOfRowsChanged" class="form-control"
                                     style="width: 70px;">
-                                {{$selectedNum := .propagation.selectedNum}}
-                                {{ range $index, $filter := .propagation.pageSizeSelector}}
+                                {{$selectedNum := .Propagation.selectedNum}}
+                                {{ range $index, $filter := .Propagation.pageSizeSelector}}
                                     <option value="{{$index}}" {{ if eq $index $selectedNum}} selected {{ end }}>{{$filter}}</option>
                                 {{ end }}
                             </select>
                         </div>
 
-                        <div class="page-size d-flex ml-3 mr-auto mt-1 {{ if .propagation.chartView }}d-none{{ end }}"
+                        <div class="page-size d-flex ml-3 mr-auto mt-1 {{ if .Propagation.chartView }}d-none{{ end }}"
                             data-target="propagation.paginationButtonsWrapper">
                             <a href="javascript:void(0)" data-target="propagation.previousPageButton"
                             data-action="click->propagation#loadPreviousPage"
-                            class="mr-2 {{ if lt .propagation.previousPage 1 }}d-none{{ end }}">&lt;Previous </a>
+                            class="mr-2 {{ if lt .Propagation.previousPage 1 }}d-none{{ end }}">&lt;Previous </a>
 
                             <p class="text-muted" style="white-space: nowrap;"> Page <span
                                         data-target="propagation.currentPage"
-                                        data-current-page="{{ .propagation.currentPage }}"
-                                        class="text-muted"> {{ .propagation.currentPage }}</span> of <span
+                                        data-current-page="{{ .Propagation.currentPage }}"
+                                        class="text-muted"> {{ .Propagation.currentPage }}</span> of <span
                                         data-target="propagation.totalPageCount"
-                                        class="text-muted">{{ .propagation.totalPages }}</span>
+                                        class="text-muted">{{ .Propagation.totalPages }}</span>
                             </p>
 
                             <a href="javascript:void(0)" data-target="propagation.nextPageButton"
                             data-action="click->propagation#loadNextPage"
-                            class="ml-2 {{ if not .propagation.nextPage }}d-none{{ end }}"> Next&gt;</a>
+                            class="ml-2 {{ if not .Propagation.nextPage }}d-none{{ end }}"> Next&gt;</a>
                         </div>
                     </div>
                 </div>
                 {{/*combine view*/}}
-                <table class="table collapsible mx-auto {{ if not .propagation.both }}d-none{{ end }}"
+                <table class="table collapsible mx-auto {{ if not .Propagation.both }}d-none{{ end }}"
                        data-target="propagation.table">
-                    {{range $index, $block := .propagation.records}}
+                    {{range $index, $block := .Propagation.records}}
                         <tbody data-target="propagation.blocksTbody" data-block-hash="{{$block.BlockHash}}">
                         <tr>
                             <td colspan="100">
@@ -271,7 +271,7 @@
                 </table>
 
                 {{/*blocks only*/}}
-                <table class="table d-none mx-auto {{ if not .propagation.blocks }}d-none{{ end }}"
+                <table class="table d-none mx-auto {{ if not .Propagation.blocks }}d-none{{ end }}"
                        data-target="propagation.blocksTable">
                     <thead>
                     <tr style="white-space: nowrap;">
@@ -298,7 +298,7 @@
 
                 {{/*votes only*/}}
                 <table data-target="propagation.votesTable"
-                       class="table d-none mx-auto {{ if not .propagation.votes }}d-none{{ end }}">
+                       class="table d-none mx-auto {{ if not .Propagation.votes }}d-none{{ end }}">
                     <thead>
                     <tr style="white-space: nowrap;">
                         <th>Voting On</th>

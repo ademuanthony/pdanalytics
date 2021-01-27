@@ -40,17 +40,18 @@ func (c *propagation) propagationPage(w http.ResponseWriter, r *http.Request) {
 
 	block, err := c.fetchPropagationData(r)
 	if err != nil {
+		log.Error(err)
 		c.StatusPage(w, r, web.DefaultErrorCode, web.DefaultErrorMessage, "", web.ExpStatusError)
 		return
 	}
 
 	str, err := c.templates.ExecTemplateToString("propagation", struct {
 		*web.CommonPageData
-		Propagation   map[string]interface{}
-		BlockTime float64
+		Propagation map[string]interface{}
+		BlockTime   float64
 	}{
 		CommonPageData: c.commonData(r),
-		Propagation:        block,
+		Propagation:    block,
 		BlockTime:      c.activeChain.MinDiffReductionTime.Seconds(),
 	})
 
@@ -179,7 +180,7 @@ func (c *propagation) getBlocks(res http.ResponseWriter, req *http.Request) {
 		web.RenderErrorfJSON(res, err.Error())
 		return
 	}
-	
+
 	web.RenderJSON(res, data)
 }
 

@@ -31,29 +31,37 @@ func (l logWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func NewPgDb(host, port, user, pass, dbname string, debug bool, syncSources []string,
-	syncSourceDbProvider func(source string) (*PgDb, error)) (*PgDb, error) {
+func NewPgDb(host, port, user, pass, dbname string, debug bool, /*syncSources []string,
+syncSourceDbProvider func(source string) (*PgDb, error) */) (*PgDb, error) {
 
 	db, err := dbhelpers.Connect(host, port, user, pass, dbname)
 	if err != nil {
 		return nil, err
 	}
 	db.SetMaxOpenConns(5)
-	if debug {
-		boil.DebugMode = true
-		boil.DebugWriter = logWriter{}
-	}
+	// if debug {
+	// 	boil.DebugMode = true
+	// 	boil.DebugWriter = logWriter{}
+	// }
 	return &PgDb{
-		db:                   db,
-		queryTimeout:         time.Second * 30,
-		syncSources:          syncSources,
-		syncSourceDbProvider: syncSourceDbProvider,
+		db:           db,
+		queryTimeout: time.Second * 30,
+		// syncSources:          syncSources,
+		// syncSourceDbProvider: syncSourceDbProvider,
 	}, nil
 }
 
 func (pg *PgDb) Close() error {
 	log.Trace("Closing postgresql connection")
 	return pg.db.Close()
+}
+
+func (pg *PgDb) BlockTableName() string {
+	return models.TableNames.Block
+}
+
+func (pg *PgDb) VoteTableName() string {
+	return models.TableNames.Vote
 }
 
 func (pg *PgDb) SaveBlock(ctx context.Context, block Block) error {

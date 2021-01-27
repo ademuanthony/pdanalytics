@@ -63,7 +63,7 @@ func (pg PgDb) StoreMempool(ctx context.Context, mempoolDto mempool.Mempool) err
 	}
 	//  tx count 76, total size 54205 B, fees 0.00367100
 	log.Infof("Added mempool entry at %s, tx count %2d, total size: %6d B, Total Fee: %010.8f",
-		mempoolDto.Time.Format(dateTemplate), mempoolDto.NumberOfTransactions, mempoolDto.Size, mempoolDto.TotalFee)
+		mempoolDto.Time.Format(dbhelpers.DateTemplate), mempoolDto.NumberOfTransactions, mempoolDto.Size, mempoolDto.TotalFee)
 	if err = pg.UpdateMempoolAggregateData(ctx); err != nil {
 		return err
 	}

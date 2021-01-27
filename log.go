@@ -11,6 +11,7 @@ import (
 	"github.com/planetdecred/pdanalytics/pkgs/mempool"
 	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres"
 	"github.com/planetdecred/pdanalytics/pkgs/parameters"
+	"github.com/planetdecred/pdanalytics/pkgs/propagation"
 	"github.com/planetdecred/pdanalytics/pkgs/stakingreward"
 )
 
@@ -48,6 +49,7 @@ var (
 	stakingrewardLog = backendLog.Logger("STCK")
 	mempoolLog       = backendLog.Logger("MEMP")
 	mempoolPgLog     = backendLog.Logger("MPPG")
+	propagationLog = backendLog.Logger("PROP")
 )
 
 // Initialize package-global logger variables.
@@ -57,6 +59,7 @@ func init() {
 	stakingreward.UseLogger(stakingrewardLog)
 	mempool.UseLogger(mempoolLog)
 	postgres.UseLogger(mempoolPgLog)
+	propagation.UseLogger(propagationLog)
 }
 
 // subsystemLoggers maps each subsystem identifier to its associated logger.
@@ -67,6 +70,7 @@ var subsystemLoggers = map[string]slog.Logger{
 	"STCK": stakingrewardLog,
 	"MEMP": mempoolLog,
 	"MPPG": mempoolPgLog,
+	"PROP": propagationLog,
 }
 
 // initLogRotator initializes the logging rotater to write logs to logFile and

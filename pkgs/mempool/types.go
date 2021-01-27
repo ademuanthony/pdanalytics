@@ -36,7 +36,6 @@ type Dto struct {
 type DataStore interface {
 	CreateTables(ctx context.Context) error
 	DropTables() error
-	ClearCache() error
 	MempoolTableName() string
 	StoreMempool(context.Context, Mempool) error
 	UpdateMempoolAggregateData(ctx context.Context) error

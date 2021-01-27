@@ -20,6 +20,7 @@ import (
 	"github.com/planetdecred/pdanalytics/pkgs/mempool"
 	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres"
 	"github.com/planetdecred/pdanalytics/pkgs/parameters"
+	"github.com/planetdecred/pdanalytics/pkgs/propagation"
 	"github.com/planetdecred/pdanalytics/pkgs/stakingreward"
 	"github.com/planetdecred/pdanalytics/web"
 )
@@ -195,6 +196,23 @@ func _main(ctx context.Context) error {
 			return fmt.Errorf("Failed to create new attackcost component, %s", err.Error())
 		}
 		go mp.StartMonitoring(ctx)
+	}
+
+	if cfg.EnablePropagation == 1 {
+		db, err := propagation.NewPgDb(cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPass,
+			cfg.DBName, cfg.LogLevel == DebugLogLevel)
+
+		if err != nil {
+			return fmt.Errorf("error in establishing database connection: %s", err.Error())
+		}
+
+		mp, err := propagation.New(ctx, dcrdClient, db, webServer, "", activeChain)
+		if err != nil {
+			log.Error(err)
+			return fmt.Errorf("Failed to create new propagation component, %s", err.Error())
+		}
+
+		notifier.RegisterBlockHandlerGroup(mp.ConnectBlock)
 	}
 
 	// (*notify.Notifier).processBlock will discard incoming block if PrevHash does not match
