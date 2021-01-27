@@ -46,6 +46,17 @@ type store interface {
 	UpdateVoteTimeDeviationData(context.Context) error
 	FetchVoteForSync(ctx context.Context, date time.Time, offtset int, limit int) ([]Vote, int64, error)
 
+	BlockCount(ctx context.Context) (int64, error)
+	Blocks(ctx context.Context, offset int, limit int) ([]BlockDto, error)
+	BlocksWithoutVotes(ctx context.Context, offset int, limit int) ([]BlockDto, error)
+
+	Votes(ctx context.Context, offset int, limit int) ([]VoteDto, error)
+	VotesByBlock(ctx context.Context, blockHash string) ([]VoteDto, error)
+	VotesCount(ctx context.Context) (int64, error)
+
+	FetchEncodePropagationChart(ctx context.Context, dataType, axis string,
+		binString string, extras ...string) ([]byte, error)
+
 	datasync.Store
 }
 

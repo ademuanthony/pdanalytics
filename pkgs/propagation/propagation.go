@@ -34,6 +34,53 @@ func New(ctx context.Context, dcrdClient *rpcclient.Client, dataStore store,
 		dcrClient:   dcrdClient,
 	}
 
+	tmpls := []string{"propagation"}
+
+	for _, name := range tmpls {
+		if err := ac.templates.AddTemplate(name); err != nil {
+			log.Errorf("Unable to create new html template: %v", err)
+			return nil, err
+		}
+	}
+
+	ac.webServer.AddMenuItem(web.MenuItem{
+		Href:      "/propagation",
+		HyperText: "Propagation",
+		Attributes: map[string]string{
+			"class": "menu-item",
+			"title": "Block Propagation",
+		},
+	})
+
+	// Development subsidy address of the current network
+	devSubsidyAddress, err := web.DevSubsidyAddress(params)
+	if err != nil {
+		log.Warnf("propagation.New: %v", err)
+		return nil, err
+	}
+	log.Debugf("Organization address: %s", devSubsidyAddress)
+
+	ac.pageData = &web.PageData{
+		BlockInfo: new(web.BlockInfo),
+		HomeInfo: &web.HomeInfo{
+			DevAddress: devSubsidyAddress,
+			Params: web.ChainParams{
+				WindowSize:       ac.activeChain.StakeDiffWindowSize,
+				RewardWindowSize: ac.activeChain.SubsidyReductionInterval,
+				BlockTime:        ac.activeChain.TargetTimePerBlock.Nanoseconds(),
+				MeanVotingBlocks: ac.MeanVotingBlocks,
+			},
+			PoolInfo: web.TicketPoolInfo{
+				Target: uint32(ac.activeChain.TicketPoolSize * ac.activeChain.TicketsPerBlock),
+			},
+		},
+	}
+
+	webServer.AddRoute("/propagation", web.GET, ac.propagationPage, true)
+	webServer.AddRoute("/getPropagationData", web.GET, ac.getPropagationData, false)
+	webServer.AddRoute("/getblocks", web.GET, ac.getBlocks, false)
+	webServer.AddRoute("/getvotes", web.GET, ac.getVotes, false)
+
 	return ac, nil
 }
 

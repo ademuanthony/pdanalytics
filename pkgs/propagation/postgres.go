@@ -31,7 +31,9 @@ func (l logWriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func NewPgDb(host, port, user, pass, dbname string, debug bool) (*PgDb, error) {
+func NewPgDb(host, port, user, pass, dbname string, debug bool, syncSources []string,
+	syncSourceDbProvider func(source string) (*PgDb, error)) (*PgDb, error) {
+
 	db, err := dbhelpers.Connect(host, port, user, pass, dbname)
 	if err != nil {
 		return nil, err
@@ -42,8 +44,10 @@ func NewPgDb(host, port, user, pass, dbname string, debug bool) (*PgDb, error) {
 		boil.DebugWriter = logWriter{}
 	}
 	return &PgDb{
-		db:           db,
-		queryTimeout: time.Second * 30,
+		db:                   db,
+		queryTimeout:         time.Second * 30,
+		syncSources:          syncSources,
+		syncSourceDbProvider: syncSourceDbProvider,
 	}, nil
 }
 
@@ -1114,7 +1118,7 @@ func (pg *PgDb) updateVoteTimeDeviationDailyAvgData(ctx context.Context) error {
 }
 
 // TODO: break down into individual chart type
-func (pg *PgDb) fetchEncodePropagationChart(ctx context.Context, dataType, axis string,
+func (pg *PgDb) FetchEncodePropagationChart(ctx context.Context, dataType, axis string,
 	binString string, extras ...string) ([]byte, error) {
 
 	blockDelays, err := pg.propagationBlockChartData(ctx, 0)
