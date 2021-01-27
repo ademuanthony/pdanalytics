@@ -34,7 +34,7 @@ func New(ctx context.Context, dcrdClient *rpcclient.Client, dataStore store,
 		dcrClient:   dcrdClient,
 	}
 
-	tmpls := []string{"propagation"}
+	tmpls := []string{"propagation", "status"}
 
 	for _, name := range tmpls {
 		if err := ac.templates.AddTemplate(name); err != nil {
