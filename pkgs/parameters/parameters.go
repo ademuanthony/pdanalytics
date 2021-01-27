@@ -81,7 +81,7 @@ func New(dcrdClient *rpcclient.Client, webServer *web.Server, viewFolder string,
 		},
 	}
 
-	webServer.AddRoute("/parameters", web.GET, exp.handle)
+	webServer.AddRoute("/parameters", web.GET, exp.handle, true)
 
 	return exp, nil
 }

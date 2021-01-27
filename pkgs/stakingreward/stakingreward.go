@@ -112,8 +112,8 @@ func New(dcrdClient *rpcclient.Client, webServer *web.Server, viewFolder string,
 		},
 	}
 
-	webServer.AddRoute("/staking-reward", web.GET, exp.stakingReward)
-	webServer.AddRoute("/staking-reward/get-future-reward", web.GET, exp.targetTicketReward)
+	webServer.AddRoute("/staking-reward", web.GET, exp.stakingReward, true)
+	webServer.AddRoute("/staking-reward/get-future-reward", web.GET, exp.targetTicketReward, true)
 
 	return exp, nil
 }

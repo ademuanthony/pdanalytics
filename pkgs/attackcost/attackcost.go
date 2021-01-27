@@ -105,7 +105,7 @@ func New(dcrdClient *rpcclient.Client, webServer *web.Server, viewFolder string,
 		},
 	}
 
-	webServer.AddRoute("/attack-cost", web.GET, ac.AttackCost)
+	webServer.AddRoute("/attack-cost", web.GET, ac.AttackCost, true)
 
 	return ac, nil
 }

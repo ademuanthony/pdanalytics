@@ -23,15 +23,16 @@ type route struct {
 	Path       string
 	Mathod     method
 	Handler    http.HandlerFunc
+	HasUI      bool
 	Middleware []func(next http.Handler) http.Handler
 }
 
-func (s *Server) AddRoute(path string, method method, handlerFunc http.HandlerFunc, middleware ...func(next http.Handler) http.Handler) {
+func (s *Server) AddRoute(path string, method method, handlerFunc http.HandlerFunc, hasUI bool, middleware ...func(next http.Handler) http.Handler) {
 	if _, found := s.routes[path]; found {
 		panic("duplicate route")
 	}
 	s.routes[path] = route{
-		path, method, handlerFunc, middleware,
+		path, method, handlerFunc, hasUI, middleware,
 	}
 }
 
@@ -42,12 +43,12 @@ type routeGroup struct {
 	Routes     map[string]route
 }
 
-func (s *routeGroup) Add(path string, method method, handlerFunc http.HandlerFunc, middleware ...func(next http.Handler) http.Handler) {
+func (s *routeGroup) Add(path string, method method, handlerFunc http.HandlerFunc, hasUI bool, middleware ...func(next http.Handler) http.Handler) {
 	if _, found := s.Routes[path]; found {
 		panic("duplicate route")
 	}
 	s.Routes[path] = route{
-		path, method, handlerFunc, middleware,
+		path, method, handlerFunc, hasUI, middleware,
 	}
 }
 
@@ -79,7 +80,7 @@ func (s *Server) BuildRoute() {
 			s.webMux.With(r.Middleware...).Options(path, r.Handler)
 		}
 
-		if defaultHandler.Handler == nil {
+		if r.HasUI && defaultHandler.Handler == nil {
 			defaultHandler = r
 		}
 		if path == "/" {

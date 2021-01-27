@@ -99,9 +99,9 @@ func NewCollector(ctx context.Context, client *rpcclient.Client, interval float6
 		},
 	}
 
-	webServer.AddRoute("/mempool", web.GET, c.mempoolPage)
-	webServer.AddRoute("/getmempool", web.GET, c.getMempool)
-	webServer.AddRoute("/api/charts/mempool/{chartDataType}", web.GET, c.chart, chartDataTypeCtx)
+	webServer.AddRoute("/mempool", web.GET, c.mempoolPage, true)
+	webServer.AddRoute("/getmempool", web.GET, c.getMempool, false)
+	webServer.AddRoute("/api/charts/mempool/{chartDataType}", web.GET, c.chart, false, chartDataTypeCtx)
 
 	return c, nil
 }
