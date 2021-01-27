@@ -40,9 +40,9 @@ func New(ctx context.Context, dcrdClient *rpcclient.Client, dataStore store,
 func (c *propagation) SetExplorerBestBlock(ctx context.Context) error {
 	var explorerUrl string
 	switch c.activeChain.Name {
-	case chaincfg.MainNetParams.Name:
+	case chaincfg.MainNetParams().Name:
 		explorerUrl = "https://explorer.dcrdata.org/api/block/best"
-	case chaincfg.TestNet3Params.Name:
+	case chaincfg.TestNet3Params().Name:
 		explorerUrl = "https://testnet.dcrdata.org/api/block/best"
 	}
 
