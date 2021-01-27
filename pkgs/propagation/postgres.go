@@ -39,10 +39,10 @@ syncSourceDbProvider func(source string) (*PgDb, error) */) (*PgDb, error) {
 		return nil, err
 	}
 	db.SetMaxOpenConns(5)
-	// if debug {
-	// 	boil.DebugMode = true
-	// 	boil.DebugWriter = logWriter{}
-	// }
+
+	boil.DebugWriter = logWriter{}
+	boil.DebugMode = debug
+
 	return &PgDb{
 		db:           db,
 		queryTimeout: time.Second * 30,

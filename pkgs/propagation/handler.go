@@ -1,6 +1,7 @@
 package propagation
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math"
@@ -8,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-chi/chi"
 	"github.com/planetdecred/dcrextdata/datasync"
 	"github.com/planetdecred/pdanalytics/web"
 )
@@ -429,4 +431,41 @@ func (c *propagation) StatusPage(w http.ResponseWriter, r *http.Request, code, m
 		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 	io.WriteString(w, str)
+}
+
+// api/charts/propagation/{dataType}
+func (c *propagation) chart(w http.ResponseWriter, r *http.Request) {
+	dataType := getChartDataTypeCtx(r)
+	bin := r.URL.Query().Get("bin")
+	axis := r.URL.Query().Get("axis")
+	extras := r.URL.Query().Get("extras")
+
+	chartData, err := c.dataStore.FetchEncodePropagationChart(r.Context(), dataType, axis, bin, extras)
+	if err != nil {
+		web.RenderErrorfJSON(w, err.Error())
+		log.Warnf(`Error fetching mempool %s chart: %v`, dataType, err)
+		return
+	}
+	web.RenderJSONBytes(w, chartData)
+}
+
+// chartDataTypeCtx returns a http.HandlerFunc that embeds the value at the url
+// part {chartAxisType} into the request context.
+func chartDataTypeCtx(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.WithValue(r.Context(), "ctxChartDataType",
+			chi.URLParam(r, "chartDataType"))
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// getChartDataTypeCtx retrieves the ctxChartAxisType data from the request context.
+// If not set, the return value is an empty string.
+func getChartDataTypeCtx(r *http.Request) string {
+	chartAxisType, ok := r.Context().Value("ctxChartDataType").(string)
+	if !ok {
+		log.Trace("chart axis type not set")
+		return ""
+	}
+	return chartAxisType
 }

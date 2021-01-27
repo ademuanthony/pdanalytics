@@ -26,24 +26,26 @@ func New(ctx context.Context, dcrdClient *rpcclient.Client, dataStore store,
 		viewFolder = "./pkgs/propagation/views"
 	}
 
-	ac := &propagation{
+	prop := &propagation{
+		ctx:         ctx,
 		dataStore:   dataStore,
 		templates:   web.NewTemplates(viewFolder, false, []string{"extras"}, web.MakeTemplateFuncMap(params)),
 		webServer:   webServer,
 		activeChain: params,
+		ticketInds:  make(BlockValidatorIndex),
 		dcrClient:   dcrdClient,
 	}
 
 	tmpls := []string{"propagation", "status"}
 
 	for _, name := range tmpls {
-		if err := ac.templates.AddTemplate(name); err != nil {
+		if err := prop.templates.AddTemplate(name); err != nil {
 			log.Errorf("Unable to create new html template: %v", err)
 			return nil, err
 		}
 	}
 
-	ac.webServer.AddMenuItem(web.MenuItem{
+	prop.webServer.AddMenuItem(web.MenuItem{
 		Href:      "/propagation",
 		HyperText: "Propagation",
 		Attributes: map[string]string{
@@ -60,38 +62,39 @@ func New(ctx context.Context, dcrdClient *rpcclient.Client, dataStore store,
 	}
 	log.Debugf("Organization address: %s", devSubsidyAddress)
 
-	ac.pageData = &web.PageData{
+	prop.pageData = &web.PageData{
 		BlockInfo: new(web.BlockInfo),
 		HomeInfo: &web.HomeInfo{
 			DevAddress: devSubsidyAddress,
 			Params: web.ChainParams{
-				WindowSize:       ac.activeChain.StakeDiffWindowSize,
-				RewardWindowSize: ac.activeChain.SubsidyReductionInterval,
-				BlockTime:        ac.activeChain.TargetTimePerBlock.Nanoseconds(),
-				MeanVotingBlocks: ac.MeanVotingBlocks,
+				WindowSize:       prop.activeChain.StakeDiffWindowSize,
+				RewardWindowSize: prop.activeChain.SubsidyReductionInterval,
+				BlockTime:        prop.activeChain.TargetTimePerBlock.Nanoseconds(),
+				MeanVotingBlocks: prop.MeanVotingBlocks,
 			},
 			PoolInfo: web.TicketPoolInfo{
-				Target: uint32(ac.activeChain.TicketPoolSize * ac.activeChain.TicketsPerBlock),
+				Target: uint32(prop.activeChain.TicketPoolSize * prop.activeChain.TicketsPerBlock),
 			},
 		},
 	}
 
-	webServer.AddRoute("/propagation", web.GET, ac.propagationPage, true)
-	webServer.AddRoute("/getpropagationdata", web.GET, ac.getPropagationData, false)
-	webServer.AddRoute("/getblocks", web.GET, ac.getBlocks, false)
-	webServer.AddRoute("/getvotes", web.GET, ac.getVotes, false)
-	webServer.AddRoute("/getvotebyblock", web.GET, ac.getVoteByBlock, false)
+	webServer.AddRoute("/propagation", web.GET, prop.propagationPage, true)
+	webServer.AddRoute("/getpropagationdata", web.GET, prop.getPropagationData, false)
+	webServer.AddRoute("/getblocks", web.GET, prop.getBlocks, false)
+	webServer.AddRoute("/getvotes", web.GET, prop.getVotes, false)
+	webServer.AddRoute("/getvotebyblock", web.GET, prop.getVoteByBlock, false)
+	webServer.AddRoute("/api/charts/propagation/{chartDataType}", web.GET, prop.chart, false, chartDataTypeCtx)
 
-	return ac, nil
+	return prop, nil
 }
 
 func (c *propagation) SetExplorerBestBlock(ctx context.Context) error {
 	var explorerUrl string
 	switch c.activeChain.Name {
 	case chaincfg.MainNetParams().Name:
-		explorerUrl = "https://explorer.dcrdata.org/api/block/best"
+		explorerUrl = "https://explorer.planetdecred.org/api/block/best"
 	case chaincfg.TestNet3Params().Name:
-		explorerUrl = "https://testnet.dcrdata.org/api/block/best"
+		explorerUrl = "https://testnet.planetdecred.org/api/block/best"
 	}
 
 	var bestBlock = struct {
