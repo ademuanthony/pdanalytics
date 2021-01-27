@@ -84,29 +84,14 @@ func (pg *PgDb) tableExists(name string) (bool, error) {
 func (pg *PgDb) DropTables() error {
 
 	// mempool
-	if err := pg.dropTable("mempool"); err != nil {
+	if err := dbhelpers.DropTable("mempool"); err != nil {
 		return err
 	}
 
 	// mempool_bin
-	if err := pg.dropTable("mempool_bin"); err != nil {
+	if err := dbhelpers.DropTable("mempool_bin"); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (pg *PgDb) ClearCache() error {
-	// mempool_bin
-	if err := pg.dropTable("mempool_bin"); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (pg *PgDb) dropTable(name string) error {
-	log.Tracef("Dropping table %s", name)
-	_, err := pg.db.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS %s;`, name))
-	return err
 }

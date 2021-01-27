@@ -15,9 +15,10 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/kat-co/vala v0.0.0-20170210184112-42e1d8b61f12
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/lib/pq v1.0.0
+	github.com/lib/pq v1.9.0
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0 // indirect
+	github.com/planetdecred/pdanalytics/dbhelpers v0.0.0-00010101000000-000000000000
 	github.com/planetdecred/pdanalytics/pkgs/cache v0.0.0-00010101000000-000000000000
 	github.com/planetdecred/pdanalytics/web v0.0.0-20210125191324-0735b483e313
 	github.com/spf13/viper v1.3.2
@@ -30,6 +31,7 @@ require (
 )
 
 replace (
+	github.com/planetdecred/pdanalytics/dbhelpers => ../../dbhelpers
 	github.com/planetdecred/pdanalytics/pkgs/cache => ../cache
 	github.com/planetdecred/pdanalytics/web => ../../web
 )

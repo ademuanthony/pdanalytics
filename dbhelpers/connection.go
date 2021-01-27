@@ -1,7 +1,7 @@
 // Copyright (c) 2017, The dcrdata developers
 // See LICENSE for details.
 
-package postgres
+package dbhelpers
 
 import (
 	"database/sql"

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/planetdecred/pdanalytics/dbhelpers"
 	"github.com/planetdecred/pdanalytics/pkgs/cache"
 	"github.com/planetdecred/pdanalytics/pkgs/mempool"
 	"github.com/planetdecred/pdanalytics/pkgs/mempool/postgres/models"
@@ -28,7 +29,7 @@ func (l logWriter) Write(p []byte) (n int, err error) {
 }
 
 func NewPgDb(host, port, user, pass, dbname string, debug bool) (*PgDb, error) {
-	db, err := Connect(host, port, user, pass, dbname)
+	db, err := dbhelpers.Connect(host, port, user, pass, dbname)
 	if err != nil {
 		return nil, err
 	}
@@ -111,12 +112,12 @@ func (pg *PgDb) Mempools(ctx context.Context, offtset int, limit int) ([]mempool
 	for _, m := range mempoolSlice {
 		result = append(result, mempool.Dto{
 			TotalFee:             m.TotalFee.Float64,
-			FirstSeenTime:        m.FirstSeenTime.Time.Format(dateTemplate),
+			FirstSeenTime:        m.FirstSeenTime.Time.Format(dbhelpers.DateTemplate),
 			Total:                m.Total.Float64,
 			Voters:               m.Voters.Int,
 			Tickets:              m.Tickets.Int,
 			Revocations:          m.Revocations.Int,
-			Time:                 m.Time.Format(dateTemplate),
+			Time:                 m.Time.Format(dbhelpers.DateTemplate),
 			Size:                 int32(m.Size.Int),
 			NumberOfTransactions: m.NumberOfTransactions.Int,
 		})
