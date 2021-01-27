@@ -1,9 +1,3 @@
-// TODO:
-// - Create the handlers
-// Create the views
-// Adapts the layout
-// Adapt the js controllers
-
 package mempool
 
 import (
@@ -18,26 +12,8 @@ import (
 	"github.com/decred/dcrd/chaincfg/v2"
 	dcrjson "github.com/decred/dcrd/rpc/jsonrpc/types/v2"
 	"github.com/decred/dcrd/rpcclient/v5"
+	"github.com/decred/dcrd/wire"
 	"github.com/planetdecred/pdanalytics/web"
-)
-
-const (
-	chartViewOption             = "chart"
-	defaultViewOption           = chartViewOption
-	mempoolDefaultChartDataType = "size"
-	maxPageSize                 = 250
-	defaultPageSize             = 20
-	noDataMessage               = "does not have data for the selected query option(s)."
-)
-
-var (
-	pageSizeSelector = map[int]int{
-		20:  20,
-		30:  30,
-		50:  50,
-		100: 100,
-		150: 150,
-	}
 )
 
 func NewCollector(ctx context.Context, client *rpcclient.Client, interval float64,
@@ -55,6 +31,23 @@ func NewCollector(ctx context.Context, client *rpcclient.Client, interval float6
 		collectionInterval: interval,
 		dataStore:          dataStore,
 		activeChain:        activeChain,
+	}
+
+	if err := c.SetExplorerBestBlock(ctx); err != nil {
+		return nil, err
+	}
+
+	hash, err := client.GetBestBlockHash()
+	if err != nil {
+		return nil, err
+	}
+	blockHeader, err := client.GetBlockHeader(hash)
+	if err != nil {
+		return nil, err
+	}
+
+	if err = c.ConnectBlock(blockHeader); err != nil {
+		return nil, err
 	}
 
 	tmpls := []string{"mempool", "status"}
@@ -110,7 +103,7 @@ func (c *Collector) SetExplorerBestBlock(ctx context.Context) error {
 	var explorerUrl string
 	switch c.activeChain.Name {
 	case chaincfg.MainNetParams().Name:
-		explorerUrl = "https://explorer.dcrdata.org/api/block/best"
+		explorerUrl = "https://explorer.dcrdata.org/api/block/best" //TODO: use dcrd server
 	case chaincfg.TestNet3Params().Name:
 		explorerUrl = "https://testnet.dcrdata.org/api/block/best"
 	}
@@ -129,10 +122,16 @@ func (c *Collector) SetExplorerBestBlock(ctx context.Context) error {
 	return nil
 }
 
+func (c *Collector) ConnectBlock(blockHeader *wire.BlockHeader) error {
+	c.syncIsDone = blockHeader.Height >= c.bestBlockHeight
+	return nil
+}
+
 func (c *Collector) StartMonitoring(ctx context.Context) {
 	var mu sync.Mutex
 
 	collectMempool := func() {
+		log.Info("c.syncIsDone", c.syncIsDone)
 		if !c.syncIsDone {
 			return
 		}

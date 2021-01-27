@@ -12,8 +12,24 @@ import (
 )
 
 const (
-	retryDelay       = 60 * time.Second
-	maxRetryAttempts = 3
+	retryDelay                  = 60 * time.Second
+	maxRetryAttempts            = 3
+	chartViewOption             = "chart"
+	defaultViewOption           = chartViewOption
+	mempoolDefaultChartDataType = "size"
+	maxPageSize                 = 250
+	defaultPageSize             = 20
+	noDataMessage               = "does not have data for the selected query option(s)."
+)
+
+var (
+	pageSizeSelector = map[int]int{
+		20:  20,
+		30:  30,
+		50:  50,
+		100: 100,
+		150: 150,
+	}
 )
 
 // GetResponse attempts to collect json data from the given url string and decodes it into
