@@ -341,6 +341,7 @@ func (c *propagation) fetchVoteData(req *http.Request) (map[string]interface{}, 
 	return data, nil
 }
 
+// getVoteByBlock
 func (c *propagation) getVoteByBlock(res http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	hash := req.FormValue("block_hash")

@@ -77,9 +77,10 @@ func New(ctx context.Context, dcrdClient *rpcclient.Client, dataStore store,
 	}
 
 	webServer.AddRoute("/propagation", web.GET, ac.propagationPage, true)
-	webServer.AddRoute("/getPropagationData", web.GET, ac.getPropagationData, false)
+	webServer.AddRoute("/getpropagationdata", web.GET, ac.getPropagationData, false)
 	webServer.AddRoute("/getblocks", web.GET, ac.getBlocks, false)
 	webServer.AddRoute("/getvotes", web.GET, ac.getVotes, false)
+	webServer.AddRoute("/getvotebyblock", web.GET, ac.getVoteByBlock, false)
 
 	return ac, nil
 }

@@ -206,13 +206,14 @@ func _main(ctx context.Context) error {
 			return fmt.Errorf("error in establishing database connection: %s", err.Error())
 		}
 
-		mp, err := propagation.New(ctx, dcrdClient, db, webServer, "", activeChain)
+		prop, err := propagation.New(ctx, dcrdClient, db, webServer, "", activeChain)
 		if err != nil {
 			log.Error(err)
 			return fmt.Errorf("Failed to create new propagation component, %s", err.Error())
 		}
 
-		notifier.RegisterBlockHandlerGroup(mp.ConnectBlock)
+		notifier.RegisterBlockHandlerGroup(prop.ConnectBlock)
+		notifier.RegisterTxHandlerGroup(prop.TxReceived)
 	}
 
 	// (*notify.Notifier).processBlock will discard incoming block if PrevHash does not match
