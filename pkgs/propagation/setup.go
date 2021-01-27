@@ -1,5 +1,7 @@
 package propagation
 
+//go:generate sqlboiler --wipe psql --no-hooks --no-auto-timestamps
+
 import (
 	"context"
 

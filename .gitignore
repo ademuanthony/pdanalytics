@@ -53,6 +53,8 @@ dcrrates/rateserver/logs/
 pgsql_*.sql
 sqlite_*.sql
 db/dcrpg/chkdcrpg/chkdcrpg
+pkgs/mempool/postgres/sqlboiler.toml
+pkgs/propagation/sqlboiler.toml
 
 public/dist/
 public/js/dist/
